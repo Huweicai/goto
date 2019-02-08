@@ -39,7 +39,7 @@ func GetConfigPath() string {
 }
 
 func NewNest(configPath string) (*Nest, error) {
-	conf, err := loadYaml(configPath)
+	conf, err := loadConfig(configPath)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (n *Nest) GetScalar(paths []string) (URL string, ok bool) {
 }
 
 func (n *Nest) Flush() error {
-	return writeYaml(GetConfigPath(), n.Data)
+	return writeConfig(GetConfigPath(), n.Data)
 }
 
 func (n *Nest) AddScalar(paths []string, url string) {
@@ -70,7 +70,7 @@ func typeOf(i interface{}) ModelType {
 }
 
 //load config from yaml
-func loadYaml(path string) (conf map[string]interface{}, err error) {
+func loadConfig(path string) (conf map[string]interface{}, err error) {
 	f, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func loadYaml(path string) (conf map[string]interface{}, err error) {
 }
 
 //put the config into yaml file
-func writeYaml(path string, target interface{}) error {
+func writeConfig(path string, target interface{}) error {
 	out, err := yaml.Marshal(target)
 	if err != nil {
 		return err
@@ -174,7 +174,7 @@ func toLower(m map[string]interface{}) map[string]interface{} {
 		delete(m, k)
 		switch typeOf(v) {
 		case TypeScalar:
-			v = strings.ToLower(v.(string))
+			//scalar do not need to be lower
 		case TypeVector:
 			v = toLower(v.(map[string]interface{}))
 		default:

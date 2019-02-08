@@ -14,12 +14,12 @@ func Get(args []string) {
 	}
 	url, ok := nest.GetScalar(args)
 	if !ok {
+		log.Println("%+v not found", args)
 		return
 	}
 	cmd := exec.Command("open", url)
 	err = cmd.Run()
 	if err != nil {
 		log.Fatal(err.Error())
-
 	}
 }
