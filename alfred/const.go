@@ -32,3 +32,7 @@ type Mod struct {
 	Icon      *Icon             `json:"icon,omitempty"`      //From Alfred 3.4.1
 	Variables map[string]string `json:"variables,omitempty"` //From Alfred 3.4.1
 }
+
+type Output struct {
+	Items []*Item `json:"items"`
+}

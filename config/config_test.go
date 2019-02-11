@@ -5,6 +5,31 @@ import (
 	"testing"
 )
 
+var testNest = Nest{
+	Data: map[string]interface{}{
+		"keyA": "123",
+		"keyB": "123",
+		"keyC": "123",
+		"keyD": map[string]interface{}{
+			"keyA": "123",
+			"keyB": "123",
+		},
+		"keyE": map[string]interface{}{
+			"keyA": "123",
+			"keyB": "123",
+			"keyC": map[string]interface{}{
+				"keyA": "123",
+				"keyB": "123",
+			},
+		},
+	},
+}
+
+func TestNest_ListWithPre(t *testing.T) {
+	out := testNest.ListWithPre([]string{"keyE", "keyA"})
+	println(out)
+}
+
 func Test_typeOf(t *testing.T) {
 	type args struct {
 		i interface{}

@@ -3,6 +3,7 @@ package config
 import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"log"
 	"os"
 	"reflect"
 	"strings"
@@ -11,8 +12,9 @@ import (
 type ModelType int
 
 const (
-	configName  = "config.yaml"
-	LoopBackKey = "@"
+	configName   = "config.yaml"
+	LoopBackKey  = "@"
+	TipSeparator = ", "
 
 	TypeUnknown ModelType = iota
 	TypeVector
@@ -58,6 +60,53 @@ func (n *Nest) AddScalar(paths []string, url string) {
 	addScalar(n.Data, paths, url)
 }
 
+//alfred
+func (n *Nest) ListWithPre(paths []string) map[string]string {
+	switch len(paths) {
+	case 0:
+		return findMapPrefix(n.Data, "")
+	case 1:
+		return findMapPrefix(n.Data, paths[0])
+	default:
+		out, ok := getByPath(paths[:len(paths)-1], n.Data)
+		if !ok {
+			return nil
+		}
+		m, ok := out.(map[string]interface{})
+		if !ok {
+			return nil
+		}
+		return findMapPrefix(m, paths[len(paths)-1])
+
+	}
+
+	return nil
+}
+
+func findMapPrefix(m map[string]interface{}, pre string) map[string]string {
+	found := make(map[string]string)
+	for k, v := range m {
+		if strings.HasPrefix(k, pre) {
+			switch typeOf(v) {
+			case TypeVector:
+				found[k] = extractKeys(v.(map[string]interface{}))
+			case TypeScalar:
+				found[k] = v.(string)
+			}
+		}
+	}
+	return found
+}
+
+func extractKeys(m map[string]interface{}) string {
+	out := ""
+	for k, _ := range m {
+		out += k + TipSeparator
+	}
+	out = strings.TrimSuffix(out, TipSeparator)
+	return out
+}
+
 func typeOf(i interface{}) ModelType {
 	switch reflect.TypeOf(i).Kind() {
 	case reflect.Map:
@@ -65,6 +114,7 @@ func typeOf(i interface{}) ModelType {
 	case reflect.String:
 		return TypeScalar
 	default:
+		log.Print("WARNNIG unknown type" + reflect.TypeOf(i).Kind().String())
 		return TypeUnknown
 	}
 }
@@ -131,29 +181,37 @@ func addScalar(m map[string]interface{}, paths []string, url string) map[string]
 
 //get the specified URL
 func getScalar(paths []string, m map[string]interface{}) (scalar string, ok bool) {
-	if len(paths) == 0 {
+	if len(paths) == 0 || len(m) == 0 {
 		return
 	}
-	value, got := m[paths[0]]
-	if !got {
+	v, ok := getByPath(paths, m)
+	if !ok {
 		return
 	}
-	switch typeOf(value) {
+	switch typeOf(v) {
 	case TypeScalar:
-		return value.(string), true
+		return v.(string), true
 	case TypeVector:
-		if len(paths) == 1 {
-			v, ok := value.(map[string]interface{})[LoopBackKey]
-			if ok {
-				return v.(string), true
-			} else {
-				return "", false
-			}
+		v, ok := v.(map[string]interface{})[LoopBackKey]
+		if ok {
+			return v.(string), true
+		} else {
+			return "", false
 		}
-		return getScalar(paths[1:], value.(map[string]interface{}))
 	default:
 		return
 	}
+}
+
+func getByPath(paths []string, m map[string]interface{}) (out interface{}, ok bool) {
+	if len(paths) == 0 || len(m) == 0 {
+		return
+	}
+	out, ok = m[paths[0]]
+	if !ok || len(paths) == 1 {
+		return
+	}
+	return getByPath(paths[1:], out.(map[string]interface{}))
 }
 
 //convert map[interface{}]intreface{} to map[string]interface{}
