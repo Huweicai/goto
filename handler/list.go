@@ -17,7 +17,8 @@ func List(args []string) {
 	output := alfred.NewOutput()
 	for k, v := range outKV {
 		arg := strings.Join(append(args[:len(args)-1], k), " ")
-		output.AddSimpleTip(k, v, arg, arg)
+		//add a space for auto complete convenient
+		output.AddSimpleTip(k, v, arg, arg+" ")
 	}
 	output.Show()
 }

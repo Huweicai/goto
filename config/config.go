@@ -66,7 +66,7 @@ func (n *Nest) ListWithPre(paths []string) map[string]string {
 	case 0:
 		return findMapPrefix(n.Data, "")
 	case 1:
-		return findMapPrefix(n.Data, paths[0])
+		return findMapPrefix(n.Data, strings.ToLower(paths[0]))
 	default:
 		out, ok := getByPath(paths[:len(paths)-1], n.Data)
 		if !ok {
@@ -76,7 +76,7 @@ func (n *Nest) ListWithPre(paths []string) map[string]string {
 		if !ok {
 			return nil
 		}
-		return findMapPrefix(m, paths[len(paths)-1])
+		return findMapPrefix(m, strings.ToLower(paths[len(paths)-1]))
 
 	}
 
