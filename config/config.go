@@ -122,10 +122,11 @@ func typeOf(i interface{}) ModelType {
 //load config from yaml
 func loadConfig(path string) (conf map[string]interface{}, err error) {
 	if !fileExists(path) {
-		_, err = os.Create(path)
+		emt, err := os.Create(path)
 		if err != nil {
-			return
+			return nil, err
 		}
+		emt.Close()
 	}
 	f, err := ioutil.ReadFile(path)
 	if err != nil {

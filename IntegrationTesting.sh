@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -ev
+set -v
+rm config.yaml
 go build
 ./goto add test "http://example.com"
 ./goto add test test test "http://baidu.com"
