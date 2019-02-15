@@ -121,6 +121,12 @@ func typeOf(i interface{}) ModelType {
 
 //load config from yaml
 func loadConfig(path string) (conf map[string]interface{}, err error) {
+	if !fileExists(path) {
+		_, err = os.Create(path)
+		if err != nil {
+			return
+		}
+	}
 	f, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -134,6 +140,14 @@ func loadConfig(path string) (conf map[string]interface{}, err error) {
 	conf = toMapStringInterface(m)
 	toLower(conf)
 	return
+}
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
 
 //put the config into yaml file

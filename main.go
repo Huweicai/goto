@@ -3,7 +3,12 @@ package main
 import (
 	"flag"
 	"github.com/Huweicai/goto/handler"
+	"log"
 )
+
+func init() {
+	log.SetFlags(log.Lshortfile | log.Ldate)
+}
 
 func main() {
 	flag.Parse()
