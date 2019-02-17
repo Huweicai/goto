@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/Huweicai/goto/config"
 	"log"
 	"os/exec"
@@ -12,14 +13,17 @@ func Get(args []string) {
 		log.Fatalf("init nest failed err:%s", err.Error())
 		return
 	}
-	url, ok := nest.GetScalar(args)
+	value, ok := nest.GetScalar(args)
 	if !ok {
 		log.Println("%+v not found", args)
 		return
 	}
-	cmd := exec.Command("open", url)
+	cmd := exec.Command("open", value)
+	//print for copy to clipboard
+	fmt.Print(value)
+	//try to open it
 	err = cmd.Run()
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Println(err.Error())
 	}
 }
