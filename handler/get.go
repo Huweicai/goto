@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Huweicai/goto/config"
 	"log"
+	"net/url"
 	"os/exec"
 )
 
@@ -16,6 +17,13 @@ func Get(args []string) {
 	value, ok := nest.GetScalar(args)
 	if !ok {
 		log.Println("%+v not found", args)
+		return
+	}
+	_, uErr := url.Parse(value)
+	if uErr != nil {
+		//not url
+		//print for copy to clipboard
+		fmt.Print(value)
 		return
 	}
 	cmd := exec.Command("open", value)
