@@ -21,3 +21,10 @@ dir1 dir2 key url，也可以用来存一个值，当备忘录使用，当你存
 输入的时候是支持自动补全的，可以在极快的时间内打开指定的地址
 
 ![open](https://anonymous-1253692322.cos.ap-beijing.myqcloud.com/github/goto/goto_open_example.png)
+
+
+### 实现原理
+所以的信息都是储存在 workFlow 目录下的 config.yaml文件中的，@表示它的上一级对应的打开路径，所以其实可以通过直接修改这个yaml
+文件来进行对URL的管理
+
+![config.yaml]( https://anonymous-1253692322.cos.ap-beijing.myqcloud.com/github/goto/goto_data.png)
