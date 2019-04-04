@@ -1,3 +1,5 @@
+[![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
+
 # 安装
 1 点此下载最新版本：https://github.com/Huweicai/goto/releases 
 
