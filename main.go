@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/Huweicai/goto/alfred"
 	"github.com/Huweicai/goto/handler"
 	"log"
 )
@@ -16,5 +17,5 @@ func main() {
 	if len(args) <= 1 {
 		panic("too few arguments")
 	}
-	handler.GetHandler(args[0])(args[1:])
+	alfred.SHOW(handler.GetHandler(args[0])(args[1:]))
 }

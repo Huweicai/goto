@@ -2,21 +2,22 @@ package handler
 
 import (
 	"fmt"
+	"github.com/Huweicai/goto/alfred"
 	"github.com/Huweicai/goto/config"
 	"log"
 	"os/exec"
 )
 
-func Get(args []string) {
+func Get(args []string) *alfred.Output {
 	nest, err := config.NewNest("./config.yaml")
 	if err != nil {
 		log.Fatalf("init nest failed err:%s", err.Error())
-		return
+		return nil
 	}
 	value, ok := nest.GetScalar(args)
 	if !ok {
 		log.Println("%+v not found", args)
-		return
+		return nil
 	}
 	cmd := exec.Command("open", value)
 	//try to open it
@@ -24,7 +25,7 @@ func Get(args []string) {
 		//not url
 		//print for copy to clipboard
 		fmt.Print(value)
-		return
 		log.Println(err.Error())
 	}
+	return nil
 }

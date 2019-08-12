@@ -6,6 +6,12 @@ import (
 	"log"
 )
 
+func SHOW(out *Output) {
+	if out != nil {
+		out.Show()
+	}
+}
+
 func NewSimpleItem(title, subTitle, arg, autoComplete string) *Item {
 	return &Item{
 		Title:        title,

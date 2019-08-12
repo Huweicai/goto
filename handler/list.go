@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-func List(args []string) {
+func List(args []string) *alfred.Output {
 	nest, err := config.NewNest(config.GetConfigPath())
 	if err != nil {
 		log.Fatalf(err.Error())
-		return
+		return nil
 	}
 	outKV := nest.ListWithPre(args)
 	output := alfred.NewOutput()
@@ -20,5 +20,19 @@ func List(args []string) {
 		//add a space for auto complete convenient
 		output.AddSimpleTip(k, v, arg, arg+" ")
 	}
-	output.Show()
+	return output
+}
+
+/**
+list for add
+*/
+func Aist(args []string) (out *alfred.Output) {
+	defer func() {
+		if r := recover(); r != nil || out == nil || out.Items == nil {
+			out = &alfred.Output{Items: []*alfred.Item{
+				alfred.NewSimpleItem("GADD", "input url to add it to goto", strings.Join(args, " "), ""),
+			}}
+		}
+	}()
+	return List(args)
 }
