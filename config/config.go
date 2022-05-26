@@ -1,12 +1,13 @@
 package config
 
 import (
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
 	"reflect"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 type ModelType int
@@ -21,7 +22,7 @@ const (
 	TypeScalar
 )
 
-//the core config
+// Nest the core config
 type Nest struct {
 	Data map[string]interface{}
 }
@@ -32,11 +33,13 @@ func GetConfigPath() string {
 	if err != nil {
 		return defaultPath
 	}
+
 	if strings.HasSuffix(wd, "goto") {
 		return "./" + configName
 	} else if strings.HasSuffix(wd, "handler") || strings.HasSuffix(wd, "config") {
 		return "../" + configName
 	}
+
 	return defaultPath
 }
 
@@ -45,6 +48,7 @@ func NewNest(configPath string) (*Nest, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &Nest{Data: conf}, nil
 }
 
@@ -60,7 +64,6 @@ func (n *Nest) AddScalar(paths []string, url string) {
 	addScalar(n.Data, paths, url)
 }
 
-//alfred
 func (n *Nest) ListWithPre(paths []string) map[string]string {
 	switch len(paths) {
 	case 0:
@@ -72,10 +75,12 @@ func (n *Nest) ListWithPre(paths []string) map[string]string {
 		if !ok {
 			return nil
 		}
+
 		m, ok := out.(map[string]interface{})
 		if !ok {
 			return nil
 		}
+
 		return findMapPrefix(m, strings.ToLower(paths[len(paths)-1]))
 
 	}

@@ -1,9 +1,10 @@
 package handler
 
 import (
+	"log"
+
 	"github.com/Huweicai/goto/alfred"
 	"github.com/Huweicai/goto/config"
-	"log"
 )
 
 func Add(args []string) *alfred.Output {
@@ -12,7 +13,12 @@ func Add(args []string) *alfred.Output {
 		log.Fatalf(err.Error())
 		return nil
 	}
+
 	nest.AddScalar(args[:len(args)-1], args[len(args)-1])
-	nest.Flush()
+	if err := nest.Flush(); err != nil {
+		log.Printf("flush failed: %v", err)
+		return nil
+	}
+
 	return nil
 }

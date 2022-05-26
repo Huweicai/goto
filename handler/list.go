@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"github.com/Huweicai/goto/alfred"
-	"github.com/Huweicai/goto/config"
 	"log"
 	"strings"
+
+	"github.com/Huweicai/goto/alfred"
+	"github.com/Huweicai/goto/config"
 )
 
 func List(args []string) *alfred.Output {

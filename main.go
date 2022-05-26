@@ -2,9 +2,10 @@ package main
 
 import (
 	"flag"
+	"log"
+
 	"github.com/Huweicai/goto/alfred"
 	"github.com/Huweicai/goto/handler"
-	"log"
 )
 
 func init() {
