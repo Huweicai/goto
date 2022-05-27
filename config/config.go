@@ -1,10 +1,12 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -13,9 +15,10 @@ import (
 type ModelType int
 
 const (
-	configName   = "config.yaml"
-	LoopBackKey  = "@"
-	TipSeparator = ", "
+	configName      = "config.yaml"
+	LoopBackKey     = "@"
+	TipSeparator    = ", "
+	ScalarSeparator = " @@@ "
 
 	TypeUnknown ModelType = iota
 	TypeVector
@@ -25,6 +28,43 @@ const (
 // Nest the core config
 type Nest struct {
 	Data map[string]interface{}
+}
+
+type DeserializedScalar struct {
+	Val       string
+	Frequency int64
+}
+
+type Key struct {
+	Key       string
+	Val       string
+	Frequency int64
+}
+
+func DeserializeScalar(s string) *DeserializedScalar {
+	ss := strings.Split(s, ScalarSeparator)
+	if len(ss) != 2 {
+		return &DeserializedScalar{
+			Val: s,
+		}
+	}
+
+	frequency, err := strconv.ParseInt(ss[0], 10, 64)
+	if err != nil {
+		log.Printf("parse frequncy '%s' as int64 failed: %v\n", ss[0], err)
+		return &DeserializedScalar{
+			Val: s,
+		}
+	}
+
+	return &DeserializedScalar{
+		Val:       ss[1],
+		Frequency: frequency,
+	}
+}
+
+func (s *DeserializedScalar) Serialize() string {
+	return fmt.Sprintf("%d%s%s", s.Frequency, ScalarSeparator, s.Val)
 }
 
 func GetConfigPath() string {
@@ -52,8 +92,48 @@ func NewNest(configPath string) (*Nest, error) {
 	return &Nest{Data: conf}, nil
 }
 
-func (n *Nest) GetScalar(paths []string) (URL string, ok bool) {
-	return getScalar(paths, n.Data)
+func (n *Nest) GetScalar(paths []string) (*DeserializedScalar, bool) {
+	s, ok := getScalar(paths, n.Data)
+	if ok {
+		return DeserializeScalar(s), true
+	}
+
+	return nil, false
+}
+
+// IncScalar increase the scalar for usage statistic
+func (n *Nest) IncScalar(paths []string) bool {
+	return incScalar(n.Data, paths)
+}
+
+func incScalar(data interface{}, paths []string) bool {
+	if len(paths) == 0 {
+		return false
+	}
+	dataMap, ok := data.(map[string]interface{})
+	if !ok {
+		return false
+	}
+
+	currKey := paths[0]
+	paths = paths[1:]
+
+	currVal, ok := dataMap[currKey]
+	if !ok {
+		return false
+	}
+
+	switch typedCurrVal := currVal.(type) {
+	case string:
+		scalar := DeserializeScalar(typedCurrVal)
+		scalar.Frequency++
+		dataMap[currKey] = scalar.Serialize()
+
+	case map[string]interface{}:
+		incScalar(typedCurrVal, paths)
+	}
+
+	return false
 }
 
 func (n *Nest) Flush() error {
@@ -64,7 +144,7 @@ func (n *Nest) AddScalar(paths []string, url string) {
 	addScalar(n.Data, paths, url)
 }
 
-func (n *Nest) ListWithPre(paths []string) map[string]string {
+func (n *Nest) ListWithPre(paths []string) []*Key {
 	switch len(paths) {
 	case 0:
 		return findMapPrefix(n.Data, "")
@@ -82,24 +162,32 @@ func (n *Nest) ListWithPre(paths []string) map[string]string {
 		}
 
 		return findMapPrefix(m, strings.ToLower(paths[len(paths)-1]))
-
 	}
 
 	return nil
 }
 
-func findMapPrefix(m map[string]interface{}, pre string) map[string]string {
-	found := make(map[string]string)
+func findMapPrefix(m map[string]interface{}, pre string) []*Key {
+	found := []*Key{}
 	for k, v := range m {
 		if strings.HasPrefix(k, pre) {
 			switch typeOf(v) {
 			case TypeVector:
-				found[k] = extractKeys(v.(map[string]interface{}))
+				found = append(found, &Key{
+					Key: k,
+					Val: extractKeys(v.(map[string]interface{})),
+				})
 			case TypeScalar:
-				found[k] = v.(string)
+				scalar := DeserializeScalar(v.(string))
+				found = append(found, &Key{
+					Key:       k,
+					Val:       scalar.Val,
+					Frequency: scalar.Frequency,
+				})
 			}
 		}
 	}
+
 	return found
 }
 

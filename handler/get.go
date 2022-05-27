@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"os/exec"
 
 	"github.com/Huweicai/goto/alfred"
@@ -15,17 +16,26 @@ func Get(args []string) *alfred.Output {
 		log.Fatalf("init nest failed err:%s", err.Error())
 		return nil
 	}
-	value, ok := nest.GetScalar(args)
+	scalar, ok := nest.GetScalar(args)
 	if !ok {
 		log.Printf("%+v not found\n", args)
 		return nil
 	}
-	cmd := exec.Command("open", value)
-	// try to open it
-	if err = cmd.Run(); err != nil {
+
+	nest.IncScalar(args)
+	_ = nest.Flush()
+
+	u, _ := url.Parse(scalar.Val)
+	if u.Scheme == "" {
 		// not url
 		// print for copy to clipboard
-		fmt.Print(value)
+		fmt.Print(scalar.Val)
+		return nil
+	}
+
+	cmd := exec.Command("open", scalar.Val)
+	// try to open it
+	if err = cmd.Run(); err != nil {
 		log.Println(err.Error())
 	}
 	return nil

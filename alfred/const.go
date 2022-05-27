@@ -13,6 +13,8 @@ type Item struct {
 	Text         *Text             `json:"text,omitempty"`
 	Mods         map[string]*Mod   `json:"mods,omitempty"`
 	Variables    map[string]string `json:"variables,omitempty"` //From Alfred 3.4.1
+
+	Rank int64 `json:"-"` // for internal sorting
 }
 
 type Icon struct {

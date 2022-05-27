@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -14,13 +15,20 @@ func List(args []string) *alfred.Output {
 		log.Fatalf(err.Error())
 		return nil
 	}
-	outKV := nest.ListWithPre(args)
+
+	keys := nest.ListWithPre(args)
 	output := alfred.NewOutput()
-	for k, v := range outKV {
-		arg := strings.Join(append(args[:len(args)-1], k), " ")
+
+	for _, key := range keys {
+		arg := strings.Join(append(args[:len(args)-1], key.Key), " ")
 		//add a space for auto complete convenient
-		output.AddSimpleTip(k, v, arg, arg+" ")
+		item := output.AddSimpleTip(key.Key, key.Val, arg, arg+" ")
+		item.Rank = key.Frequency
+		if key.Frequency != 0 {
+			item.Subtitle = fmt.Sprintf("%d%s%s", key.Frequency, config.ScalarSeparator, key.Val)
+		}
 	}
+
 	return output
 }
 
