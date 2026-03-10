@@ -10,6 +10,14 @@ import (
 )
 
 func List(args []string) *alfred.Output {
+	// if first arg starts with $, delegate to aist-style listing for that command
+	if len(args) > 0 && strings.HasPrefix(args[0], cmdPrefix) {
+		cmd := strings.TrimPrefix(args[0], cmdPrefix)
+		if _, ok := builtinCmds[cmd]; ok {
+			return Aist(args[1:])
+		}
+	}
+
 	nest, err := config.NewNest(config.GetConfigPath())
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -18,6 +26,20 @@ func List(args []string) *alfred.Output {
 
 	keys := nest.ListWithPre(args)
 	output := alfred.NewOutput()
+
+	// show matching $commands when at root level
+	if len(args) <= 1 {
+		pre := ""
+		if len(args) == 1 {
+			pre = args[0]
+		}
+		for cmd := range builtinCmds {
+			full := cmdPrefix + cmd
+			if strings.HasPrefix(full, pre) {
+				output.AddSimpleTip(full, "builtin: "+cmd, full, full+" ")
+			}
+		}
+	}
 
 	for _, key := range keys {
 		arg := strings.Join(append(args[:len(args)-1], key.Key), " ")
