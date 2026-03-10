@@ -39,7 +39,7 @@ func (o *Output) AddTip(item *Item) {
 
 func (o *Output) Show() {
 	sort.Slice(o.Items, func(i, j int) bool {
-		return o.Items[i].Rank < o.Items[i].Rank
+		return o.Items[i].Rank > o.Items[j].Rank
 	})
 
 	text, err := json.Marshal(o)

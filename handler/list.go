@@ -25,14 +25,15 @@ func List(args []string) *alfred.Output {
 		item := output.AddSimpleTip(key.Key, key.Val, arg, arg+" ")
 		item.Rank = key.Frequency
 		if key.Frequency != 0 {
-			item.Subtitle = fmt.Sprintf("%d%s%s", key.Frequency, config.ScalarSeparator, key.Val)
+			item.Subtitle = fmt.Sprintf("[%d] %s", key.Frequency, key.Val)
 		}
 	}
 
 	return output
 }
 
-/**
+/*
+*
 list for add
 */
 func Aist(args []string) (out *alfred.Output) {

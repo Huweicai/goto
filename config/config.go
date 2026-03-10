@@ -17,6 +17,7 @@ type ModelType int
 const (
 	configName      = "config.yaml"
 	LoopBackKey     = "@"
+	FreqKey         = "_freq"
 	TipSeparator    = ", "
 	ScalarSeparator = " @@@ "
 
@@ -130,10 +131,36 @@ func incScalar(data interface{}, paths []string) bool {
 		dataMap[currKey] = scalar.Serialize()
 
 	case map[string]interface{}:
+		// increment frequency on this intermediate/root node
+		incVectorFreq(typedCurrVal)
 		incScalar(typedCurrVal, paths)
 	}
 
 	return false
+}
+
+// incVectorFreq increments the frequency counter stored in a vector node's FreqKey
+func incVectorFreq(m map[string]interface{}) {
+	freq := getVectorFreq(m)
+	freq++
+	m[FreqKey] = fmt.Sprintf("%d", freq)
+}
+
+// getVectorFreq reads the frequency counter from a vector node
+func getVectorFreq(m map[string]interface{}) int64 {
+	v, ok := m[FreqKey]
+	if !ok {
+		return 0
+	}
+	s, ok := v.(string)
+	if !ok {
+		return 0
+	}
+	freq, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return freq
 }
 
 func (n *Nest) Flush() error {
@@ -170,12 +197,18 @@ func (n *Nest) ListWithPre(paths []string) []*Key {
 func findMapPrefix(m map[string]interface{}, pre string) []*Key {
 	found := []*Key{}
 	for k, v := range m {
+		// skip internal metadata keys
+		if k == FreqKey {
+			continue
+		}
 		if strings.HasPrefix(k, pre) {
 			switch typeOf(v) {
 			case TypeVector:
+				vm := v.(map[string]interface{})
 				found = append(found, &Key{
-					Key: k,
-					Val: extractKeys(v.(map[string]interface{})),
+					Key:       k,
+					Val:       extractKeys(vm),
+					Frequency: getVectorFreq(vm),
 				})
 			case TypeScalar:
 				scalar := DeserializeScalar(v.(string))
@@ -193,7 +226,10 @@ func findMapPrefix(m map[string]interface{}, pre string) []*Key {
 
 func extractKeys(m map[string]interface{}) string {
 	out := ""
-	for k, _ := range m {
+	for k := range m {
+		if k == FreqKey {
+			continue
+		}
 		out += k + TipSeparator
 	}
 	out = strings.TrimSuffix(out, TipSeparator)
@@ -212,7 +248,7 @@ func typeOf(i interface{}) ModelType {
 	}
 }
 
-//load config from yaml
+// load config from yaml
 func loadConfig(path string) (conf map[string]interface{}, err error) {
 	if !fileExists(path) {
 		emt, err := os.Create(path)
@@ -244,7 +280,7 @@ func fileExists(filename string) bool {
 	return !info.IsDir()
 }
 
-//put the config into yaml file
+// put the config into yaml file
 func writeConfig(path string, target interface{}) error {
 	out, err := yaml.Marshal(target)
 	if err != nil {
@@ -287,7 +323,7 @@ func addScalar(m map[string]interface{}, paths []string, url string) map[string]
 	return m
 }
 
-//get the specified URL
+// get the specified URL
 func getScalar(paths []string, m map[string]interface{}) (scalar string, ok bool) {
 	if len(paths) == 0 || len(m) == 0 {
 		return
@@ -322,7 +358,7 @@ func getByPath(paths []string, m map[string]interface{}) (out interface{}, ok bo
 	return getByPath(paths[1:], out.(map[string]interface{}))
 }
 
-//convert map[interface{}]intreface{} to map[string]interface{}
+// convert map[interface{}]intreface{} to map[string]interface{}
 func toMapStringInterface(m map[interface{}]interface{}) map[string]interface{} {
 	nm := make(map[string]interface{})
 	for k, v := range m {
@@ -334,7 +370,7 @@ func toMapStringInterface(m map[interface{}]interface{}) map[string]interface{} 
 	return nm
 }
 
-//convert all the upper case to lower in both k and v
+// convert all the upper case to lower in both k and v
 func toLower(m map[string]interface{}) map[string]interface{} {
 	for k, v := range m {
 		delete(m, k)

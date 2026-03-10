@@ -11,7 +11,7 @@ import (
 )
 
 func Get(args []string) *alfred.Output {
-	nest, err := config.NewNest("./config.yaml")
+	nest, err := config.NewNest(config.GetConfigPath())
 	if err != nil {
 		log.Fatalf("init nest failed err:%s", err.Error())
 		return nil
