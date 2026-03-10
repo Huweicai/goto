@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/Huweicai/goto/alfred"
@@ -42,8 +43,26 @@ func List(args []string) *alfred.Output {
 		}
 	}
 
+	// sort by frequency descending
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i].Frequency > keys[j].Frequency
+	})
+	// when no prefix is typed, only show top 5 by frequency
+	lastArg := ""
+	if len(args) > 0 {
+		lastArg = args[len(args)-1]
+	}
+	if lastArg == "" && len(keys) > 10 {
+		keys = keys[:10]
+	}
+
 	for _, key := range keys {
-		arg := strings.Join(append(args[:len(args)-1], key.Key), " ")
+		var arg string
+		if len(args) > 0 {
+			arg = strings.Join(append(args[:len(args)-1], key.Key), " ")
+		} else {
+			arg = key.Key
+		}
 		subtitle := key.Val
 		// for textfile:// entries, show file content preview
 		if strings.HasPrefix(key.Val, textfileScheme) {
@@ -58,8 +77,9 @@ func List(args []string) *alfred.Output {
 		}
 		item := output.AddSimpleTip(key.Key, subtitle, arg, arg+" ")
 		item.Rank = key.Frequency
-		if key.Frequency != 0 {
-			item.Subtitle = fmt.Sprintf("[%d] %s", key.Frequency, subtitle)
+		displayFreq := key.Frequency % config.PrefixBoost
+		if displayFreq != 0 {
+			item.Subtitle = fmt.Sprintf("[%d] %s", displayFreq, subtitle)
 		}
 	}
 

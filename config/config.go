@@ -199,7 +199,7 @@ func (n *Nest) ListWithPre(paths []string) []*Key {
 }
 
 // prefixBoost is added to Frequency for prefix matches so they rank higher than contains matches
-const prefixBoost int64 = 1000000
+const PrefixBoost int64 = 1000000
 
 func findMapPrefix(m map[string]interface{}, pre string) []*Key {
 	found := []*Key{}
@@ -233,7 +233,7 @@ func findMapPrefix(m map[string]interface{}, pre string) []*Key {
 		}
 		if key != nil {
 			if isPrefix {
-				key.Frequency += prefixBoost
+				key.Frequency += PrefixBoost
 			}
 			found = append(found, key)
 		}

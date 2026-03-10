@@ -15,7 +15,7 @@ func init() {
 func main() {
 	flag.Parse()
 	args := flag.Args()
-	if len(args) <= 1 {
+	if len(args) == 0 {
 		panic("too few arguments")
 	}
 
