@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/Huweicai/goto/alfred"
@@ -43,11 +44,22 @@ func List(args []string) *alfred.Output {
 
 	for _, key := range keys {
 		arg := strings.Join(append(args[:len(args)-1], key.Key), " ")
-		//add a space for auto complete convenient
-		item := output.AddSimpleTip(key.Key, key.Val, arg, arg+" ")
+		subtitle := key.Val
+		// for textfile:// entries, show file content preview
+		if strings.HasPrefix(key.Val, textfileScheme) {
+			filePath := expandHome(strings.TrimPrefix(key.Val, textfileScheme))
+			if content, err := os.ReadFile(filePath); err == nil {
+				preview := strings.ReplaceAll(strings.TrimSpace(string(content)), "\n", " ")
+				if len(preview) > 100 {
+					preview = preview[:100] + "..."
+				}
+				subtitle = preview
+			}
+		}
+		item := output.AddSimpleTip(key.Key, subtitle, arg, arg+" ")
 		item.Rank = key.Frequency
 		if key.Frequency != 0 {
-			item.Subtitle = fmt.Sprintf("[%d] %s", key.Frequency, key.Val)
+			item.Subtitle = fmt.Sprintf("[%d] %s", key.Frequency, subtitle)
 		}
 	}
 

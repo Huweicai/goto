@@ -28,7 +28,8 @@ var handlers = map[string]handler{
 
 // builtinCmds maps $-prefixed commands to their handlers
 var builtinCmds = map[string]handler{
-	"add": Add,
+	"add":              Add,
+	"import-textfiles": ImportTextfiles,
 }
 
 func GetHandler(name string) handler {

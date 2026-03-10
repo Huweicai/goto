@@ -69,6 +69,10 @@ func (s *DeserializedScalar) Serialize() string {
 }
 
 func GetConfigPath() string {
+	if envPath := os.Getenv("GOTO_CONFIG_PATH"); envPath != "" {
+		return envPath
+	}
+
 	defaultPath := "./" + configName
 	wd, err := os.Getwd()
 	if err != nil {
@@ -194,6 +198,9 @@ func (n *Nest) ListWithPre(paths []string) []*Key {
 	return nil
 }
 
+// prefixBoost is added to Frequency for prefix matches so they rank higher than contains matches
+const prefixBoost int64 = 1000000
+
 func findMapPrefix(m map[string]interface{}, pre string) []*Key {
 	found := []*Key{}
 	for k, v := range m {
@@ -201,23 +208,34 @@ func findMapPrefix(m map[string]interface{}, pre string) []*Key {
 		if k == FreqKey {
 			continue
 		}
-		if strings.HasPrefix(k, pre) {
-			switch typeOf(v) {
-			case TypeVector:
-				vm := v.(map[string]interface{})
-				found = append(found, &Key{
-					Key:       k,
-					Val:       extractKeys(vm),
-					Frequency: getVectorFreq(vm),
-				})
-			case TypeScalar:
-				scalar := DeserializeScalar(v.(string))
-				found = append(found, &Key{
-					Key:       k,
-					Val:       scalar.Val,
-					Frequency: scalar.Frequency,
-				})
+		isPrefix := strings.HasPrefix(k, pre)
+		isContains := !isPrefix && strings.Contains(k, pre)
+		if !isPrefix && !isContains {
+			continue
+		}
+
+		var key *Key
+		switch typeOf(v) {
+		case TypeVector:
+			vm := v.(map[string]interface{})
+			key = &Key{
+				Key:       k,
+				Val:       extractKeys(vm),
+				Frequency: getVectorFreq(vm),
 			}
+		case TypeScalar:
+			scalar := DeserializeScalar(v.(string))
+			key = &Key{
+				Key:       k,
+				Val:       scalar.Val,
+				Frequency: scalar.Frequency,
+			}
+		}
+		if key != nil {
+			if isPrefix {
+				key.Frequency += prefixBoost
+			}
+			found = append(found, key)
 		}
 	}
 

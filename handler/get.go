@@ -12,7 +12,7 @@ import (
 	"github.com/Huweicai/goto/config"
 )
 
-const fileScheme = "file://"
+const textfileScheme = "textfile://"
 
 func Get(args []string) *alfred.Output {
 	// check for $command (e.g. "$add key1 key2 url")
@@ -34,9 +34,9 @@ func Get(args []string) *alfred.Output {
 	nest.IncScalar(args)
 	_ = nest.Flush()
 
-	// file:// scheme: read file content and print for clipboard
-	if strings.HasPrefix(scalar.Val, fileScheme) {
-		filePath := expandHome(strings.TrimPrefix(scalar.Val, fileScheme))
+	// textfile:// scheme: read file content and print for clipboard
+	if strings.HasPrefix(scalar.Val, textfileScheme) {
+		filePath := expandHome(strings.TrimPrefix(scalar.Val, textfileScheme))
 		content, err := os.ReadFile(filePath)
 		if err != nil {
 			log.Printf("read file %s failed: %v\n", filePath, err)
